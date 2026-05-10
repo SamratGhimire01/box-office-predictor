@@ -1,0 +1,4 @@
+p_venv/
+data/raw/TMDB_movie_dataset_v11.csv
+__pycache__/
+.env
