@@ -1,3 +1,12 @@
+---
+title: Box Office Revenue Predictor
+emoji: 🎬
+colorFrom: green
+colorTo: blue
+sdk: docker
+pinned: false
+---
+
 # 🎬 Box Office Revenue Predictor
 
 <p align="center">
@@ -97,7 +106,7 @@ MODEL_PATH=ml/saved_model
 
 ### Step 1 — Data Cleaning
 ```bash
-python data/raw/cleaning
+python data/raw/cleaning.py
 ```
 
 ### Step 2 — Train Both Models
@@ -105,7 +114,7 @@ python data/raw/cleaning
 python ml/train.py
 ```
 
-### Step 3 — Prediction
+### Step 3 — Prediction Function
 ```bash
 python ml/predict.py
 ```
@@ -213,6 +222,7 @@ box-office-predictor/
 │   ├── raw/
 │   └── cleaned/
 ├── images/
+├── tests/
 ├── Dockerfile
 ├── requirements.txt
 └── README.md
