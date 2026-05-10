@@ -1,0 +1,595 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Box Office Revenue Predictor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        /* ── Theme Variables ── */
+        body.rf-theme {
+            --primary: #00c853;
+            --primary-dark: #009624;
+            --primary-glow: rgba(0, 200, 83, 0.3);
+            --card-bg: #0d1f0f;
+            --input-bg: #0f2a12;
+            --border: #1b5e20;
+        }
+
+        body.lr-theme {
+            --primary: #2979ff;
+            --primary-dark: #1565c0;
+            --primary-glow: rgba(41, 121, 255, 0.3);
+            --card-bg: #0d0f1f;
+            --input-bg: #0f122a;
+            --border: #1a237e;
+        }
+
+        /* ── Header ── */
+        header {
+            background: var(--card-bg);
+            border-bottom: 2px solid var(--primary);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            letter-spacing: 1px;
+        }
+
+        .model-toggle {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .model-toggle span {
+            font-size: 0.85rem;
+            color: #aaa;
+        }
+
+        .toggle-btn {
+            background: var(--primary);
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .toggle-btn:hover {
+            background: var(--primary-dark);
+            transform: scale(1.05);
+        }
+
+        /* ── Main Layout ── */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        /* ── Cards ── */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+
+        .card h2 {
+            color: var(--primary);
+            margin-bottom: 24px;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* ── Form ── */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 8px var(--primary-glow);
+        }
+
+        /* ── Genres Grid ── */
+        .genres-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .genre-chip {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .genre-chip.selected {
+            background: var(--primary);
+            color: #000;
+            font-weight: 700;
+            border-color: var(--primary);
+        }
+
+        /* ── Predict Button ── */
+        .predict-btn {
+            width: 100%;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+            box-shadow: 0 0 20px var(--primary-glow);
+            letter-spacing: 1px;
+        }
+
+        .predict-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px var(--primary-glow);
+        }
+
+        .predict-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ── Result ── */
+        .result-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+            text-align: center;
+        }
+
+        .result-label {
+            font-size: 0.85rem;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+        }
+
+        .result-amount {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--primary);
+            text-shadow: 0 0 30px var(--primary-glow);
+            letter-spacing: -1px;
+            line-height: 1;
+        }
+
+        .result-model {
+            margin-top: 16px;
+            font-size: 0.8rem;
+            color: #666;
+            background: var(--input-bg);
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .result-placeholder {
+            color: #333;
+            font-size: 1rem;
+        }
+
+        /* ── History ── */
+        .history-section {
+            grid-column: 1 / -1;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .history-btn {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+
+        .history-btn:hover {
+            background: var(--primary);
+            color: #000;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .history-table th {
+            text-align: left;
+            padding: 12px;
+            color: var(--primary);
+            border-bottom: 1px solid var(--border);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+        }
+
+        .history-table td {
+            padding: 12px;
+            border-bottom: 1px solid #1a1a1a;
+            color: #ccc;
+        }
+
+        .history-table tr:hover td {
+            background: var(--input-bg);
+        }
+
+        .badge {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .badge-rf {
+            background: rgba(0, 200, 83, 0.15);
+            color: #00c853;
+            border: 1px solid #00c853;
+        }
+
+        .badge-lr {
+            background: rgba(41, 121, 255, 0.15);
+            color: #2979ff;
+            border: 1px solid #2979ff;
+        }
+
+        .empty-history {
+            text-align: center;
+            padding: 40px;
+            color: #444;
+        }
+
+        /* ── Loading ── */
+        .loading {
+            display: none;
+            text-align: center;
+            color: var(--primary);
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+
+        .loading.show { display: block; }
+    </style>
+</head>
+<body class="rf-theme">
+
+<header>
+    <h1>🎬 Box Office Revenue Predictor</h1>
+    <div class="model-toggle">
+        <span id="model-label">Using: <strong>Random Forest</strong></span>
+        <button class="toggle-btn" onclick="toggleModel()">
+            Switch to Linear Regression
+        </button>
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- ── Form Card ── -->
+    <div class="card">
+        <h2>Movie Details</h2>
+
+        <div class="form-group">
+            <label>Budget (in USD)</label>
+            <input type="number" id="budget" placeholder="e.g. 150000000" value="150000000" step="1000000"/>
+        </div>
+
+        <div class="form-group">
+            <label>Runtime (minutes)</label>
+            <input type="number" id="runtime" placeholder="e.g. 120" value="120"/>
+        </div>
+
+        <div class="form-group">
+            <label>Popularity Score</label>
+            <input type="number" id="popularity" placeholder="e.g. 80.5" value="80.5" step="0.1"/>
+        </div>
+
+        <div class="form-group">
+            <label>Vote Average (0-10)</label>
+            <input type="number" id="vote_average" placeholder="e.g. 7.5" value="7.5" step="0.1" min="0" max="10"/>
+        </div>
+
+        <div class="form-group">
+            <label>Release Season</label>
+            <select id="season">
+                <option value="Summer">Summer</option>
+                <option value="Winter">Winter</option>
+                <option value="Fall">Fall</option>
+                <option value="Spring">Spring</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Original Language</label>
+            <select id="language">
+                <option value="en">English</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="hi">Hindi</option>
+                <option value="pt">Portuguese</option>
+                <option value="ru">Russian</option>
+                <option value="tr">Turkish</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Number of Languages</label>
+            <input type="number" id="language_count" value="1" min="1" max="20"/>
+        </div>
+
+        <div class="form-group">
+            <label>Genres (select all that apply)</label>
+            <div class="genres-grid">
+                <div class="genre-chip" onclick="toggleGenre(this, 'action')">Action</div>
+                <div class="genre-chip" onclick="toggleGenre(this, 'adventure')">Adventure</div>
+                <div class="genre-chip" onclick="toggleGenre(this, 'animation')">Animation</div>
+                <div class="genre-chip" onclick="toggleGenre(this, 'comedy')">Comedy</div>
+                <div class="genre-chip" onclick="toggleGenre(this, 'crime')">Crime</div>
+                <div class="genre-chip" onclick="toggleGenre(this, 'documentary')">Documentary</div>
+                <div class="genre-chip" onclick="toggleGenre(this, 'drama')">Drama</div>
+                <div class="genre-chip" onclick="toggleGenre(this, 'family')">Family</div>
+                <div class="genre-chip" onclick="toggleGenre(this, 'fantasy')">Fantasy</div>
+                <div class="genre-chip" onclick="toggleGenre(this, 'horror')">Horror</div>
+                <div class="genre-chip" onclick="toggleGenre(this, 'romance')">Romance</div>
+                <div class="genre-chip" onclick="toggleGenre(this, 'science_fiction')">Sci-Fi</div>
+            </div>
+        </div>
+
+        <button class="predict-btn" onclick="predict()">
+            🎯 PREDICT REVENUE
+        </button>
+        <div class="loading" id="loading">Predicting...</div>
+    </div>
+
+    <!-- ── Result Card ── -->
+    <div class="card result-card">
+       
+        <div id="result-content">
+            
+            <p class="result-placeholder">Fill in the movie details and click Predict</p>
+        </div>
+    </div>
+
+    <!-- ── History ── -->
+    <div class="card history-section">
+        <div class="history-header">
+            <h2 style="margin:0">Prediction History</h2>
+            <button class="history-btn" onclick="loadHistory()">
+                🔄 Load All History
+            </button>
+        </div>
+        <div id="history-content">
+            <div class="empty-history">Click "Load All History" to see past predictions</div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let currentModel = "random_forest";
+    let selectedGenres = {};
+
+    // ── Toggle Model ──
+function toggleModel() {
+    if (currentModel === "random_forest") {
+        currentModel = "linear_regression";
+        document.body.className = "lr-theme";
+        document.getElementById("model-label").innerHTML = "Using: <strong>Linear Regression</strong>";
+        document.querySelector(".toggle-btn").textContent = "Switch to Random Forest";
+    } else {
+        currentModel = "random_forest";
+        document.body.className = "rf-theme";
+        document.getElementById("model-label").innerHTML = "Using: <strong>Random Forest</strong>";
+        document.querySelector(".toggle-btn").textContent = "Switch to Linear Regression";
+    }
+
+    // Auto predict if a result is already showing
+    const resultAmount = document.querySelector(".result-amount");
+    if (resultAmount) {
+        predict();
+    }
+}
+
+    // ── Toggle Genre ──
+    function toggleGenre(el, genre) {
+        if (selectedGenres[genre]) {
+            delete selectedGenres[genre];
+            el.classList.remove("selected");
+        } else {
+            selectedGenres[genre] = 1;
+            el.classList.add("selected");
+        }
+    }
+
+    // ── Predict ──
+    async function predict() {
+        const btn = document.querySelector(".predict-btn");
+        const loading = document.getElementById("loading");
+
+        btn.disabled = true;
+        loading.classList.add("show");
+
+        const budget = parseFloat(document.getElementById("budget").value);
+
+        const payload = {
+            model_type     : currentModel,
+            budget         : Math.log1p(budget),
+            runtime        : parseFloat(document.getElementById("runtime").value),
+            popularity     : parseFloat(document.getElementById("popularity").value),
+            vote_average   : parseFloat(document.getElementById("vote_average").value),
+            language_count : parseInt(document.getElementById("language_count").value),
+            season         : document.getElementById("season").value,
+            language       : document.getElementById("language").value,
+            action         : selectedGenres["action"] || 0,
+            adventure      : selectedGenres["adventure"] || 0,
+            animation      : selectedGenres["animation"] || 0,
+            comedy         : selectedGenres["comedy"] || 0,
+            crime          : selectedGenres["crime"] || 0,
+            documentary    : selectedGenres["documentary"] || 0,
+            drama          : selectedGenres["drama"] || 0,
+            family         : selectedGenres["family"] || 0,
+            fantasy        : selectedGenres["fantasy"] || 0,
+            horror         : selectedGenres["horror"] || 0,
+            romance        : selectedGenres["romance"] || 0,
+            science_fiction: selectedGenres["science_fiction"] || 0,
+        };
+
+        try {
+            const response = await fetch("/api/v1/predict", {
+                method : "POST",
+                headers: { "Content-Type": "application/json" },
+                body   : JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            document.getElementById("result-content").innerHTML = `
+                <p class="result-label">Predicted Box Office Revenue</p>
+                <div class="result-amount">${data.predicted_revenue_fmt}</div>
+                <div class="result-model">
+                    Model: ${data.model_used === "random_forest" ? "Random Forest" : "Linear Regression"}
+                </div>
+            `;
+        } catch (err) {
+            document.getElementById("result-content").innerHTML = `
+                <p style="color:#ff5252">Error: Could not get prediction. Check if API is running.</p>
+            `;
+        }
+
+        btn.disabled = false;
+        loading.classList.remove("show");
+    }
+
+    // ── Load History ──
+    async function loadHistory() {
+        try {
+            const response = await fetch("/api/v1/history");
+            const data = await response.json();
+
+            if (data.length === 0) {
+                document.getElementById("history-content").innerHTML =
+                    '<div class="empty-history">No predictions yet. Make your first prediction!</div>';
+                return;
+            }
+
+            let rows = data.map(p => `
+                <tr>
+                    <td>${p.id}</td>
+                    <td>
+                        <span class="badge ${p.model_used === 'random_forest' ? 'badge-rf' : 'badge-lr'}">
+                            ${p.model_used === 'random_forest' ? 'Random Forest' : 'Linear Regression'}
+                        </span>
+                    </td>
+                    <td>$${Math.round(Math.expm1(p.budget)).toLocaleString()}</td>
+                    <td>${p.runtime} min</td>
+                    <td>${p.genres || 'N/A'}</td>
+                    <td style="color: var(--primary); font-weight:700;">
+                        $${Math.round(p.predicted_revenue).toLocaleString()}
+                    </td>
+                    <td>${new Date(p.created_at).toLocaleDateString()}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById("history-content").innerHTML = `
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Model</th>
+                            <th>Budget</th>
+                            <th>Runtime</th>
+                            <th>Genres</th>
+                            <th>Predicted Revenue</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+        } catch (err) {
+            document.getElementById("history-content").innerHTML =
+                '<div class="empty-history" style="color:#ff5252">Error loading history.</div>';
+        }
+    }
+</script>
+
+</body>
+</html>
