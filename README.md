@@ -25,6 +25,13 @@ pinned: false
 
 ---
 
+## 🌐 Live Demo
+
+👉 **Try the live application:**  
+https://huggingface.co/spaces/samratghimire01/box-office-predictor
+
+---
+
 ## 🚀 Overview
 
 **Box Office Revenue Predictor** is a production-ready ML web application that predicts the worldwide box office revenue of a movie based on its features like budget, genre, language, season, and popularity.
@@ -245,7 +252,12 @@ This project demonstrates:
 - Backend Python Developer
 - Full Stack ML Developer
 
+## 🛠️ Tech Stack
+
+`Python` `FastAPI` `PostgreSQL` `Scikit-learn` `Pandas` `NumPy` `Docker` `Hugging Face` `Supabase` `SQLAlchemy` `Jinja2`
+
 ---
+
 
 ## 👨‍💻 Author
 
@@ -255,3 +267,10 @@ This project demonstrates:
 🔗 LinkedIn: https://www.linkedin.com/in/samratghimire01/
 
 <p align="center">⭐ If you like this project, consider giving it a star!</p>
+
+
+
+
+
+
+
